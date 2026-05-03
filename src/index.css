@@ -1,0 +1,942 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   NextNotepad - Pixel-level Notepad++ look-alike
+   ============================================================ */
+
+:root, html.theme-light {
+  /* Modern Notepad++ v8+ light palette (matches user screenshot) */
+  --bg: #F0F0F0;
+  --bg-chrome: #F0F0F0;
+  --bg-panel: #F0F0F0;
+  --bg-panel-alt: #FFFFFF;
+  --bg-editor: #FFFFFF;
+  --bg-toolbar: #F0F0F0;
+  --bg-tabbar: #CCCCCC;
+  --bg-tab-inactive: #E1E1E1;
+  --bg-tab-hover: #EAEAEA;
+  --bg-tab-active: #FFFFFF;
+  --bg-titlebar: #F0F0F0;
+  --fg-titlebar: #000000;
+  --bg-menubar: #F0F0F0;
+  --bg-menu-hover: #CCE8FF;
+  --bg-menu-popup: #F5F5F5;
+  --bg-menu-side: #F0F0F0;
+  --bg-ctx: #F5F5F5;
+  --bg-status: #F0F0F0;
+  --bg-gutter: #E4E4E4;
+  --bg-selection: #ADD6FF;
+  --bg-sel-line: #E8F2FF;
+  --bg-caret-line: #F5F9FF;
+
+  --fg: #000000;
+  --fg-muted: #444444;
+  --fg-dim: #777777;
+  --fg-gutter: #6E6E6E;
+  --fg-menu: #000000;
+  --fg-menu-sel: #000000;
+
+  --border-hard: #A0A0A0;
+  --border: #BFBFBF;
+  --border-soft: #DCDCDC;
+  --border-inset-tl: #A0A0A0;
+  --border-inset-br: #FFFFFF;
+  --border-raised-tl: #FFFFFF;
+  --border-raised-br: #A0A0A0;
+
+  --dirty: #E50000;
+  --saved: #008000;
+  --accent: #F28B00;
+  --accent-bar: #F28B00;
+
+  --syntax-key: #0000FF;
+  --syntax-str: #A31515;
+  --syntax-num: #FF8000;
+  --syntax-com: #008000;
+  --syntax-fn:  #795E26;
+}
+
+html.theme-dark {
+  /* Notepad++ Obsidian-like dark */
+  --bg: #2E2E2E;
+  --bg-chrome: #3A3A3A;
+  --bg-panel: #2B2B2B;
+  --bg-panel-alt: #1E1E1E;
+  --bg-editor: #1E1E1E;
+  --bg-toolbar: #3A3A3A;
+  --bg-tabbar: #2E2E2E;
+  --bg-tab-inactive: #393939;
+  --bg-tab-hover: #454545;
+  --bg-tab-active: #1E1E1E;
+  --bg-titlebar: linear-gradient(to bottom, #2D2D2D, #1E1E1E);
+  --fg-titlebar: #D4D4D4;
+  --bg-menubar: #3A3A3A;
+  --bg-menu-hover: #264F78;
+  --bg-menu-popup: #2D2D2D;
+  --bg-menu-side: #252525;
+  --bg-ctx: #2D2D2D;
+  --bg-status: #3A3A3A;
+  --bg-gutter: #252525;
+  --bg-selection: #264F78;
+  --bg-sel-line: #3A3A3A;
+  --bg-caret-line: #2A2A2A;
+
+  --fg: #D4D4D4;
+  --fg-muted: #A9B7C6;
+  --fg-dim: #808080;
+  --fg-gutter: #858585;
+  --fg-menu: #D4D4D4;
+  --fg-menu-sel: #FFFFFF;
+
+  --border-hard: #111111;
+  --border: #222222;
+  --border-soft: #333333;
+  --border-inset-tl: #1A1A1A;
+  --border-inset-br: #4E5254;
+  --border-raised-tl: #4E5254;
+  --border-raised-br: #1A1A1A;
+
+  --dirty: #FF6B6B;
+  --saved: #6A9955;
+  --accent: #FF8C00;
+  --accent-bar: #FF8C00;
+
+  --syntax-key: #569CD6;
+  --syntax-str: #D69D85;
+  --syntax-num: #B5CEA8;
+  --syntax-com: #6A9955;
+  --syntax-fn:  #DCDCAA;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: var(--bg-chrome);
+  color: var(--fg);
+  font-family: Tahoma, "MS Sans Serif", "Segoe UI", sans-serif;
+  font-size: 11px;
+  overflow: hidden;
+}
+* { box-sizing: border-box; }
+
+.mono {
+  font-family: Consolas, "Courier New", "Lucida Console", monospace;
+}
+
+/* ------------------------------------------------------------
+   Scrollbar - classic Windows
+   ------------------------------------------------------------ */
+.scrollbar-thin::-webkit-scrollbar { width: 16px; height: 16px; }
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-soft);
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-raised-tl);
+  border-left: 1px solid var(--border-raised-tl);
+  border-right: 1px solid var(--border-raised-br);
+  border-bottom: 1px solid var(--border-raised-br);
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--bg-tab-hover); }
+.scrollbar-thin::-webkit-scrollbar-corner { background: var(--bg-panel); }
+
+/* ------------------------------------------------------------
+   Title bar (classic Windows with file path)
+   ------------------------------------------------------------ */
+.npp-titlebar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-titlebar);
+  color: var(--fg-titlebar);
+  padding: 0 2px 0 6px;
+  height: 30px;
+  font-size: 12px;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  user-select: none;
+  border-bottom: 1px solid var(--border-soft);
+}
+.npp-titlebar-icon {
+  margin-right: 6px;
+  display: inline-flex;
+}
+.npp-titlebar-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.npp-titlebar-btn {
+  width: 40px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-titlebar);
+  cursor: pointer;
+  font-family: "Segoe MDL2 Assets", "Segoe UI Symbol", sans-serif;
+  font-size: 10px;
+}
+.npp-titlebar-btn:hover { background: rgba(0,0,0,0.08); }
+html.theme-dark .npp-titlebar-btn:hover { background: rgba(255,255,255,0.12); }
+.npp-titlebar-btn.close:hover { background: #E81123; color: #fff; }
+
+/* ------------------------------------------------------------
+   Menubar
+   ------------------------------------------------------------ */
+.npp-menubar {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-menubar);
+  color: var(--fg-menu);
+  border-bottom: 1px solid var(--border-soft);
+  user-select: none;
+  font-size: 11px;
+  height: 20px;
+  padding: 0 2px;
+}
+.npp-menubar-item {
+  padding: 2px 7px;
+  cursor: pointer;
+  line-height: 16px;
+  border: 1px solid transparent;
+}
+.npp-menubar-item:hover,
+.npp-menubar-item.open {
+  background: var(--bg-menu-hover);
+  color: var(--fg-menu-sel);
+}
+
+.npp-menu-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--bg-menu-popup);
+  border: 1px solid var(--border);
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.35);
+  min-width: 240px;
+  z-index: 200;
+  padding: 2px;
+}
+.npp-menu-popup::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  bottom: 2px;
+  width: 22px;
+  background: var(--bg-menu-side);
+}
+.npp-menu-item {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 18px 3px 28px;
+  cursor: pointer;
+  color: var(--fg-menu);
+  line-height: 18px;
+  z-index: 1;
+}
+.npp-menu-item:hover {
+  background: var(--bg-menu-hover);
+  color: var(--fg-menu-sel);
+}
+.npp-menu-shortcut {
+  color: var(--fg-dim);
+  font-size: 11px;
+  margin-left: 28px;
+}
+.npp-menu-item:hover .npp-menu-shortcut { color: #cccccc; }
+.npp-menu-sep {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 2px 2px 2px 28px;
+}
+
+/* ------------------------------------------------------------
+   Toolbar
+   ------------------------------------------------------------ */
+.npp-toolbar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-soft);
+  padding: 2px 4px;
+  height: 26px;
+  gap: 0;
+  box-shadow: inset 0 -1px 0 var(--border-soft);
+}
+.npp-tool-btn {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  padding: 0;
+}
+.npp-tool-btn:hover {
+  border-top: 1px solid var(--border-raised-tl);
+  border-left: 1px solid var(--border-raised-tl);
+  border-right: 1px solid var(--border-raised-br);
+  border-bottom: 1px solid var(--border-raised-br);
+  background: var(--bg-tab-hover);
+}
+.npp-tool-btn:active,
+.npp-tool-btn.active {
+  border-top: 1px solid var(--border-inset-tl);
+  border-left: 1px solid var(--border-inset-tl);
+  border-right: 1px solid var(--border-inset-br);
+  border-bottom: 1px solid var(--border-inset-br);
+  background: var(--bg-panel);
+}
+.npp-tool-sep {
+  width: 2px;
+  height: 18px;
+  border-left: 1px solid var(--border-inset-tl);
+  border-right: 1px solid var(--border-raised-br);
+  margin: 0 3px;
+}
+
+/* ------------------------------------------------------------
+   Tab bar - trapezoid-ish classic tabs
+   ------------------------------------------------------------ */
+.npp-tabbar {
+  display: flex;
+  align-items: flex-end;
+  background: var(--bg-toolbar);
+  padding: 2px 3px 0 3px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  min-height: 24px;
+}
+.npp-tabbar::-webkit-scrollbar { height: 0; }
+.npp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 6px;
+  background: var(--bg-tab-inactive);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-bottom: none;
+  color: var(--fg);
+  font-size: 11px;
+  font-family: Tahoma, sans-serif;
+  cursor: pointer;
+  max-width: 180px;
+  white-space: nowrap;
+  margin-right: 1px;
+  height: 20px;
+  position: relative;
+  border-radius: 2px 2px 0 0;
+}
+.npp-tab:hover { background: var(--bg-tab-hover); }
+.npp-tab.active {
+  background: var(--bg-tab-active);
+  height: 22px;
+  padding-top: 3px;
+  z-index: 2;
+  border-color: var(--border-hard);
+}
+.npp-tab.active::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  top: -1px;
+  height: 2px;
+  background: var(--accent-bar);
+}
+.npp-tab .tab-name.dirty {
+  color: var(--dirty);
+  font-style: italic;
+}
+.npp-tab .close-x {
+  margin-left: 2px;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-muted);
+  border-radius: 1px;
+}
+.npp-tab .close-x:hover {
+  background: var(--dirty);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------
+   Docked panel (explorer, tools)
+   ------------------------------------------------------------ */
+.npp-panel {
+  background: var(--bg-panel);
+  color: var(--fg);
+  border-right: 1px solid var(--border-hard);
+  display: flex;
+  flex-direction: column;
+}
+.npp-panel-sized { width: 240px; }
+.desktop-panel-wrap { display: flex; }
+.npp-panel-title {
+  background: var(--accent);
+  color: #fff;
+  font-weight: bold;
+  padding: 2px 6px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 18px;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+}
+.npp-panel-body {
+  flex: 1;
+  overflow: auto;
+  background: var(--bg-panel-alt);
+  font-size: 11px;
+}
+
+/* ------------------------------------------------------------
+   Editor
+   ------------------------------------------------------------ */
+.npp-editor-wrap {
+  background: var(--bg-editor);
+  color: var(--fg);
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  border-left: 1px solid var(--border-hard);
+}
+.npp-gutter {
+  background: var(--bg-gutter);
+  color: var(--fg-gutter);
+  text-align: right;
+  padding: 4px 6px 4px 4px;
+  border-right: 1px solid var(--border-soft);
+  user-select: none;
+  min-width: 40px;
+  font-family: Consolas, "Courier New", monospace;
+}
+.npp-bookmark-col {
+  width: 14px;
+  background: var(--bg-gutter);
+  border-right: 1px solid var(--border-soft);
+}
+.npp-code {
+  background: var(--bg-editor);
+  color: var(--fg);
+  caret-color: var(--fg);
+  width: 100%;
+  height: 100%;
+  resize: none;
+  outline: none;
+  border: none;
+  padding: 4px 8px;
+  line-height: 1.4;
+  font-size: 13px;
+  tab-size: 4;
+  font-family: Consolas, "Courier New", monospace;
+}
+.npp-code::selection { background: var(--bg-selection); color: #fff; }
+
+/* Current line highlight overlay */
+.npp-current-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--bg-sel-line);
+  pointer-events: none;
+  opacity: 0.55;
+  z-index: 0;
+}
+html.theme-dark .npp-current-line { opacity: 1; background: var(--bg-caret-line); }
+
+.npp-gutter-line.current {
+  background: var(--bg-selection);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------
+   Context menu
+   ------------------------------------------------------------ */
+.npp-ctx {
+  position: absolute;
+  background: var(--bg-ctx);
+  border: 1px solid var(--border);
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.35);
+  padding: 2px;
+  min-width: 180px;
+  z-index: 300;
+}
+.npp-ctx-item {
+  padding: 3px 16px;
+  font-size: 11px;
+  color: var(--fg);
+  cursor: pointer;
+  line-height: 18px;
+}
+.npp-ctx-item:hover {
+  background: var(--bg-menu-hover);
+  color: var(--fg-menu-sel);
+}
+.npp-ctx-sep { height: 1px; background: var(--border-soft); margin: 2px 4px; }
+
+/* ------------------------------------------------------------
+   Status bar
+   ------------------------------------------------------------ */
+.npp-status {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-status);
+  color: var(--fg);
+  border-top: 1px solid var(--border-soft);
+  font-size: 11px;
+  height: 20px;
+  font-family: Tahoma, sans-serif;
+}
+.npp-status-seg {
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  border-left: 1px solid var(--border-inset-br);
+  border-right: 1px solid var(--border-inset-tl);
+  cursor: default;
+  white-space: nowrap;
+  min-width: 0;
+}
+.npp-status-seg:first-child { border-left: none; }
+.npp-status-seg.clickable { cursor: pointer; }
+.npp-status-seg.clickable:hover { background: var(--bg-menu-hover); color: var(--fg-menu-sel); }
+
+/* ------------------------------------------------------------
+   Tools panel (bottom docked)
+   ------------------------------------------------------------ */
+.npp-tools-header {
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-hard);
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  align-items: stretch;
+  height: 28px;
+  min-height: 28px;
+}
+.npp-tools-tab {
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--fg);
+  border-right: 1px solid var(--border-soft);
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.npp-tools-tab:hover { background: var(--bg-tab-hover); }
+.npp-tools-tab.active {
+  background: var(--bg-editor);
+  color: var(--fg);
+  font-weight: bold;
+  border-bottom: 2px solid var(--accent);
+}
+.npp-tool-body {
+  background: var(--bg-editor);
+  color: var(--fg);
+  height: 100%;
+  overflow: auto;
+}
+
+/* Form controls inside tools */
+.tool-input, .tool-textarea, .tool-select {
+  background: var(--bg-editor);
+  color: var(--fg);
+  border-top: 1px solid var(--border-inset-tl);
+  border-left: 1px solid var(--border-inset-tl);
+  border-right: 1px solid var(--border-inset-br);
+  border-bottom: 1px solid var(--border-inset-br);
+  padding: 2px 5px;
+  font-size: 11px;
+  outline: none;
+  font-family: Tahoma, sans-serif;
+  border-radius: 0;
+}
+.tool-textarea {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  resize: none;
+}
+.tool-input:focus, .tool-textarea:focus {
+  border-color: var(--accent);
+}
+.tool-btn {
+  background: var(--bg-toolbar);
+  color: var(--fg);
+  border-top: 1px solid var(--border-raised-tl);
+  border-left: 1px solid var(--border-raised-tl);
+  border-right: 1px solid var(--border-raised-br);
+  border-bottom: 1px solid var(--border-raised-br);
+  padding: 3px 14px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: Tahoma, sans-serif;
+  min-width: 72px;
+}
+.tool-btn:hover { background: var(--bg-tab-hover); }
+.tool-btn:active {
+  border-top: 1px solid var(--border-inset-tl);
+  border-left: 1px solid var(--border-inset-tl);
+  border-right: 1px solid var(--border-inset-br);
+  border-bottom: 1px solid var(--border-inset-br);
+}
+.tool-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--border-inset-br) var(--border-inset-br) var(--border-inset-tl) var(--border-inset-tl);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+}
+.tool-btn.primary:hover { filter: brightness(1.08); }
+
+/* ------------------------------------------------------------
+   Dialogs (Find / Replace / Goto)
+   ------------------------------------------------------------ */
+.npp-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 400;
+  pointer-events: none;
+}
+.npp-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.15);
+  z-index: 400;
+}
+html.theme-dark .npp-dialog-overlay { background: rgba(0,0,0,0.45); }
+.npp-dialog {
+  position: fixed;
+  background: var(--bg-chrome);
+  border: 1px solid var(--border-hard);
+  box-shadow: 4px 4px 16px rgba(0,0,0,0.4);
+  z-index: 401;
+  pointer-events: auto;
+  font-size: 11px;
+  min-width: 420px;
+}
+.npp-dialog-title {
+  background: var(--bg-toolbar);
+  color: var(--fg);
+  font-weight: bold;
+  padding: 4px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  border-bottom: 1px solid var(--border-soft);
+}
+html.theme-dark .npp-dialog-title { background: #2D2D2D; }
+.npp-dialog-body {
+  padding: 10px 12px;
+}
+.npp-dialog-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.npp-dialog-row label { min-width: 80px; }
+.npp-dialog-row .tool-input { flex: 1; }
+
+/* ------------------------------------------------------------
+   Tree
+   ------------------------------------------------------------ */
+.npp-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 4px 0 2px;
+  cursor: pointer;
+  color: var(--fg);
+  font-size: 11px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.npp-tree-item:hover { background: var(--bg-menu-hover); color: var(--fg-menu-sel); }
+.npp-tree-item.active { background: var(--bg-selection); color: #fff; }
+
+.npp-search-box {
+  background: var(--bg-editor);
+  border-top: 1px solid var(--border-inset-tl);
+  border-left: 1px solid var(--border-inset-tl);
+  border-right: 1px solid var(--border-inset-br);
+  border-bottom: 1px solid var(--border-inset-br);
+  color: var(--fg);
+  padding: 2px 6px;
+  font-size: 11px;
+  outline: none;
+  width: 100%;
+  font-family: Tahoma, sans-serif;
+}
+
+/* ------------------------------------------------------------
+   Welcome
+   ------------------------------------------------------------ */
+.npp-welcome {
+  flex: 1;
+  background: var(--bg-editor);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.npp-welcome-card {
+  border-top: 1px solid var(--border-raised-tl);
+  border-left: 1px solid var(--border-raised-tl);
+  border-right: 1px solid var(--border-raised-br);
+  border-bottom: 1px solid var(--border-raised-br);
+  background: var(--bg-panel);
+  padding: 28px 40px;
+  text-align: center;
+}
+.npp-logo {
+  display: inline-block;
+  padding: 6px 10px;
+  color: var(--accent);
+  font-weight: bold;
+  font-size: 26px;
+  font-family: Georgia, "Times New Roman", serif;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+  letter-spacing: -1px;
+}
+.npp-kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: Consolas, monospace;
+  font-size: 10.5px;
+  border-top: 1px solid var(--border-raised-tl);
+  border-left: 1px solid var(--border-raised-tl);
+  border-right: 1px solid var(--border-raised-br);
+  border-bottom: 1px solid var(--border-raised-br);
+  background: var(--bg-chrome);
+  color: var(--fg);
+}
+
+/* Inset group box */
+.npp-groupbox {
+  border: 1px solid var(--border);
+  padding: 10px 12px 8px;
+  position: relative;
+  margin-top: 6px;
+}
+.npp-groupbox-title {
+  position: absolute;
+  top: -7px;
+  left: 10px;
+  background: var(--bg-chrome);
+  padding: 0 5px;
+  font-size: 11px;
+}
+
+/* Tiny checkbox styling */
+input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+/* ------------------------------------------------------------
+   Responsive / Mobile
+   ------------------------------------------------------------ */
+.npp-hamburger { display: none; }
+
+@media (max-width: 900px) {
+  html, body, #root { font-size: 12px; }
+  .npp-titlebar { height: 34px; }
+  .npp-titlebar-text { font-size: 13px; }
+  .npp-menubar { overflow-x: auto; white-space: nowrap; }
+  .npp-menubar-item { padding: 4px 10px; font-size: 12px; }
+  .npp-toolbar {
+    overflow-x: auto;
+    height: 40px;
+    padding: 4px 6px;
+    gap: 2px;
+  }
+  .npp-tool-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+  .npp-tool-btn svg { width: 20px; height: 20px; }
+  .npp-tab {
+    height: 30px;
+    padding: 4px 4px 4px 10px;
+    max-width: 160px;
+    font-size: 12px;
+  }
+  .npp-tab.active { height: 32px; }
+  .npp-code { font-size: 13px; padding: 6px 10px; }
+  .npp-status {
+    height: auto;
+    flex-wrap: wrap;
+    font-size: 11px;
+    row-gap: 2px;
+  }
+  .npp-status-seg {
+    padding: 2px 6px;
+    min-width: 0 !important;
+    flex: 0 1 auto !important;
+  }
+  .npp-tools-header { height: 34px; min-height: 34px; }
+  .npp-tools-tab { padding: 0 14px; font-size: 12px; }
+  .npp-dialog { min-width: 90vw !important; max-width: 95vw; }
+  .npp-gutter { min-width: 34px; padding: 6px 4px; }
+
+  /* Panel becomes an overlay drawer on small screens */
+  .mobile-drawer-wrap {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 82vw;
+    max-width: 320px;
+    z-index: 350;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.35);
+    background: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-drawer-wrap > .npp-panel {
+    width: 100% !important;
+    height: 100%;
+    flex: 1;
+  }
+  .mobile-drawer-wrap .npp-panel-title { height: 34px; padding: 4px 10px; font-size: 13px; }
+  .mobile-drawer-wrap .npp-panel-title .npp-tool-btn { width: 28px !important; height: 28px !important; }
+  .mobile-drawer-wrap .npp-panel-title .npp-tool-btn svg { width: 16px; height: 16px; }
+  .mobile-drawer-wrap .npp-tree-item { padding-top: 7px; padding-bottom: 7px; font-size: 13px; }
+  .mobile-drawer-wrap .npp-search-box { height: 30px; font-size: 13px; }
+  .npp-panel-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 340;
+  }
+  .npp-hamburger {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid transparent;
+    margin-right: 2px;
+  }
+  .npp-hamburger:hover { background: var(--bg-tab-hover); }
+}
+
+@media (max-width: 600px) {
+  .npp-titlebar-text { font-size: 12px; }
+  .npp-titlebar-btn { width: 36px; height: 32px; }
+  .npp-menubar-item { padding: 4px 8px; }
+  .npp-tool-sep { display: none; }
+  .npp-welcome-card { padding: 18px 20px; margin: 10px; }
+  .npp-welcome-card > div[style*="grid"] { grid-template-columns: 1fr !important; }
+}
+
+/* Safe areas for iOS notches */
+@supports (padding: env(safe-area-inset-top)) {
+  .npp-titlebar { padding-top: env(safe-area-inset-top); height: auto; min-height: 30px; }
+  .npp-status { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Voice dictation mic button */
+.npp-mic-btn {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-hard);
+  background: var(--bg-panel);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  transition: transform 120ms ease, background 120ms ease, color 120ms ease;
+}
+.npp-mic-btn:hover { background: var(--bg-tab-hover); }
+.npp-mic-btn[data-active="true"] {
+  background: #d93025;
+  color: #fff;
+  border-color: #b3261e;
+  animation: npp-mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes npp-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217,48,37,0.55); }
+  50% { box-shadow: 0 0 0 8px rgba(217,48,37,0); }
+}
+.npp-mic-toast {
+  position: absolute;
+  right: 14px;
+  bottom: 62px;
+  background: rgba(0,0,0,0.82);
+  color: #fff;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  z-index: 3;
+  max-width: 240px;
+}
+
+.npp-mic-lang-btn {
+  position: absolute;
+  right: 62px;
+  bottom: 18px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border-hard);
+  background: var(--bg-panel);
+  color: var(--fg);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.npp-mic-lang-btn:hover { background: var(--bg-tab-hover); }
+.npp-mic-lang-menu {
+  position: absolute;
+  right: 62px;
+  bottom: 58px;
+  width: 180px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--bg-menu-popup);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 5;
+  padding: 4px 0;
+}
+.npp-mic-lang-item {
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--fg);
+}
+.npp-mic-lang-item:hover { background: var(--bg-menu-hover); color: var(--fg-menu-sel); }
+.npp-mic-lang-item.active { font-weight: 700; color: var(--accent); }
