@@ -63,6 +63,8 @@ const Editor = forwardRef<EditorHandle, Props>(function Editor(
   const interimLenRef = useRef<number>(0);
   const manualStopRef = useRef<boolean>(false);
   const listeningRef = useRef<boolean>(false);
+  const lastFinalIndexRef = useRef<number>(0);
+  const startingRef = useRef<boolean>(false);
   const lineHeight = Math.round(fontSize * 1.4);
 
   useEffect(() => { valueRef.current = value; }, [value]);
@@ -93,19 +95,32 @@ const Editor = forwardRef<EditorHandle, Props>(function Editor(
   };
 
   const startRecog = () => {
+    if (startingRef.current) return;
+    if (recogRef.current) {
+      try { recogRef.current.onend = null; recogRef.current.onresult = null; recogRef.current.onerror = null; } catch { /* ignore */ }
+      try { recogRef.current.abort(); } catch { /* ignore */ }
+      recogRef.current = null;
+    }
+    startingRef.current = true;
+    lastFinalIndexRef.current = 0;
     const r = new SpeechRecognition();
     r.continuous = true;
     r.interimResults = true;
-    r.maxAlternatives = 3;
+    r.maxAlternatives = 1;
     r.lang = micLangRef.current || 'te-IN';
     r.onresult = (ev: any) => {
       let finalChunk = '';
       let interimChunk = '';
-      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      const startIdx = Math.max(ev.resultIndex, lastFinalIndexRef.current);
+      for (let i = startIdx; i < ev.results.length; i++) {
         const res = ev.results[i];
         const t = res[0].transcript;
-        if (res.isFinal) finalChunk += t;
-        else interimChunk += t;
+        if (res.isFinal) {
+          finalChunk += t;
+          lastFinalIndexRef.current = i + 1;
+        } else {
+          interimChunk += t;
+        }
       }
       if (finalChunk) {
         const needsLead = anchorRef.current > 0
@@ -116,26 +131,34 @@ const Editor = forwardRef<EditorHandle, Props>(function Editor(
       if (interimChunk) {
         const needsLead = anchorRef.current > 0
           && !/\s$/.test(valueRef.current.slice(0, anchorRef.current));
-        applyDictation((needsLead ? ' ' : '') + interimChunk, false);
+        applyDictation((needsLead ? ' ' : '') + interimChunk.trim(), false);
+      } else if (finalChunk) {
+        applyDictation('', false);
       }
     };
+    r.onstart = () => { startingRef.current = false; };
     r.onerror = (ev: any) => {
       if (ev.error === 'no-speech' || ev.error === 'aborted' || ev.error === 'network') return;
       setSpeechError(ev.error === 'not-allowed' ? 'Microphone permission denied.' : `Speech error: ${ev.error}`);
       setTimeout(() => setSpeechError(null), 3500);
     };
     r.onend = () => {
+      startingRef.current = false;
       if (!manualStopRef.current && listeningRef.current) {
         setTimeout(() => {
           if (manualStopRef.current || !listeningRef.current) return;
           try { startRecog(); } catch { setListening(false); }
-        }, 120);
+        }, 150);
         return;
       }
       setListening(false);
     };
     recogRef.current = r;
-    r.start();
+    try {
+      r.start();
+    } catch {
+      startingRef.current = false;
+    }
   };
 
   const toggleMic = () => {
